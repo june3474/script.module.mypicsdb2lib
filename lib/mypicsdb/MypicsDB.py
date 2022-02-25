@@ -1226,19 +1226,19 @@ class MyPictureDB(object):
             lD,lM,lS = lat.replace(" ","").replace("[","").replace("]","").split(",")[:3]
             LD,LM,LS = lon.replace(" ","").replace("[","").replace("]","").split(",")[:3]
             exec("lD=%s"%lD)
-            common.log("",  "lD - %s"%(lD), xbmc.LOGERROR )
+            #common.log("",  "lD - %s"%(lD), xbmc.LOGERROR )
             exec("lM=%s"%lM)
-            common.log("",  "lM - %s"%(lM), xbmc.LOGERROR )
+            #common.log("",  "lM - %s"%(lM), xbmc.LOGERROR )
             exec("lS=%s"%lS)
             lS=eval(lS)
-            common.log("",  "lS - %s"%(lS), xbmc.LOGERROR )
+            #common.log("",  "lS - %s"%(lS), xbmc.LOGERROR )
             exec("LD=%s"%LD)
-            common.log("",  "LD - %s"%(LD), xbmc.LOGERROR )
+            #common.log("",  "LD - %s"%(LD), xbmc.LOGERROR )
             exec("LM=%s"%LM)
-            common.log("",  "LM - %s"%(LM), xbmc.LOGERROR )
+            #common.log("",  "LM - %s"%(LM), xbmc.LOGERROR )
             exec("LS=%s"%LS)
             LS=eval(LS)
-            common.log("",  "LS - %s"%(LS), xbmc.LOGERROR )
+            #common.log("",  "LS - %s"%(LS), xbmc.LOGERROR )
             latitude =  (int(lD)+(int(lM)/60.0)+(int(lS)/3600.0)) * (latR=="S" and -1 or 1)
             longitude = (int(LD)+(int(LM)/60.0)+(int(LS)/3600.0)) * (lonR=="W" and -1 or 1)
             return (latitude,longitude)
@@ -1803,7 +1803,30 @@ class MyPictureDB(object):
             common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
             return None
 
-
+    def get_pic_persons(self, path, filename):
+        try:
+        
+            rows = [row for row in self.cur.request( """select tc.TagContent from Files f, TagsInFiles tif, TagContents tc, TagTypes tt
+where f.idFile = tif.idFile
+and tif.idTagContent = tc.idTagContent
+and tc.idTagType = tt.idTagType
+and tt.TagType in( 'MPReg:PersonDisplayName', 'Iptc4xmpExt:PersonInImage', 'Mwg-rs:RegionList:Face')
+and f.strPath=? AND f.strFilename=? """,(path,filename) )]
+        
+            str1 = ""
+    
+            for row in rows:
+                dummy = str(row[0])
+                if(len(str1) == 0 ):
+                    str1 = dummy
+                else:
+                    str1 = str1 + ' / ' + dummy
+                    
+            return (str1)
+        except Exception as msg:
+            common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+            return None
+            
     def get_pic_date_rating(self, path, filename):
         try:
             (date, rating) = [row for row in self.cur.request( "SELECT coalesce(ImageDateTime, '0'), ImageRating FROM Files WHERE strPath=? AND strFilename=? ",(path,filename) )][0]
