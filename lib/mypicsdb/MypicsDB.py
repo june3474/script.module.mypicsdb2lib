@@ -1806,6 +1806,8 @@ class MyPictureDB(object):
     def get_pic_persons(self, path, filename):
         try:
         
+            common.log("get_pic_persons", path, xbmc.LOGERROR )
+            common.log("get_pic_persons", filename, xbmc.LOGERROR )
             rows = [row for row in self.cur.request( """select tc.TagContent from Files f, TagsInFiles tif, TagContents tc, TagTypes tt
 where f.idFile = tif.idFile
 and tif.idTagContent = tc.idTagContent
@@ -1821,8 +1823,9 @@ and f.strPath=? AND f.strFilename=? """,(path,filename) )]
                     str1 = dummy
                 else:
                     str1 = str1 + ' / ' + dummy
-                    
+            common.log("get_pic_persons",  str1, xbmc.LOGERROR )
             return (str1)
+            #return str(rows)
         except Exception as msg:
             common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
             return None
