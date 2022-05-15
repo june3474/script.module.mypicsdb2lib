@@ -825,18 +825,21 @@ class MyPictureDB(object):
         outer_select += " order by imagedatetime "
 
         # test if start or end_date is set
-        if start_date != '' or end_date != '':
+        common.log('filterwizard_result', start_date, xbmc.LOGINFO)
+        if str(start_date) != '' and str(start_date) != '1000-01-01' or str(end_date) != '' and str(end_date) != '1000-01-01':
             dates_set = 0
             outer_select = 'Select strPath,strFilename from (' + outer_select + ' ) mainset '
             
-            if start_date != '':
+            if str(start_date) != '' and str(start_date) != '1000-01-01':
+                common.log('filterwizard_result', start_date, xbmc.LOGINFO)
                 dates_set += 1
                 if self.con.get_backend() == "mysql":
                     outer_select += " where ImageDateTime >= date_format('%s', '%%Y-%%m-%%d') "%(start_date,)
                 else:
                     outer_select += " where ImageDateTime >= date('%s') "%(start_date,)
 
-            if end_date != '':
+            if str(end_date) != '' and str(end_date) != '1000-01-01':
+                common.log('filterwizard_result', end_date, xbmc.LOGINFO)
                 dates_set += 1
                 if dates_set == 1:
                     if self.con.get_backend() == "mysql":
@@ -888,10 +891,10 @@ class MyPictureDB(object):
         if self.db_backend.lower() == 'mysql':
 
             if start_date == '':
-                start_date = "0000-00-00 00:00:00"
+                start_date = "1000-01-01 00:00:00"
 
             if end_date == '':
-                end_date = "0000-00-00 00:00:00"
+                end_date = "1000-01-01 00:00:00"
 
         try:
             rows = [row for row in self.cur.request( "select count(*) from FilterWizard where strFilterName = ? ",(filter_name, ))] [0][0]
@@ -936,9 +939,9 @@ class MyPictureDB(object):
 
                 
         # for MySQL which returns 0000-00-00 instead of NULL
-        if start_date == None or start_date == '0000-00-00':
+        if start_date == None or start_date == '1000-01-01':
             start_date = ''
-        if end_date == None or end_date == '0000-00-00':
+        if end_date == None or end_date == '1000-01-01':
             end_date = ''
 
         common.log("", "match_all = %s"%(match_all), xbmc.LOGINFO)
@@ -1611,7 +1614,10 @@ class MyPictureDB(object):
             rating_select = ''    
 
         if self.con.get_backend() == "mysql":
-            return [row for (row,) in self.cur.request( """SELECT DISTINCT count(*) FROM Files where (ImageDateTime is null or DATE(ImageDateTime) = '0000-00-00') """ + rating_select)][0]
+            try:
+                return [row for (row,) in self.cur.request( """SELECT DISTINCT count(*) FROM Files where (ImageDateTime is null or DATE(ImageDateTime) <= '1000-01-01') """ + rating_select)][0]
+            except:
+                return [row for (row,) in self.cur.request( """SELECT DISTINCT count(*) FROM Files where (ImageDateTime is null) """ + rating_select)][0]
         else:
             return [row for (row,) in self.cur.request( """SELECT DISTINCT count(*) FROM Files where (ImageDateTime is null or ImageDateTime = ''  or ImageDateTime = 'null' ) """ + rating_select)][0]
 
@@ -1764,7 +1770,7 @@ class MyPictureDB(object):
             rating_select = ''
          
         if self.con.get_backend() == "mysql":
-            select = """SELECT strPath,strFilename FROM Files where (ImageDateTime is null or DATE(ImageDateTime) = '0000-00-00')  """ + rating_select + """ ORDER BY ImageDateTime ASC"""
+            select = """SELECT strPath,strFilename FROM Files where (ImageDateTime is null or DATE(ImageDateTime) <= '1000-01-01')  """ + rating_select + """ ORDER BY ImageDateTime ASC"""
         else:
             select = """SELECT strPath,strFilename FROM Files where (ImageDateTime is null or ImageDateTime = ''  or ImageDateTime = 'null' ) """ + rating_select + """ ORDER BY ImageDateTime ASC"""
 
