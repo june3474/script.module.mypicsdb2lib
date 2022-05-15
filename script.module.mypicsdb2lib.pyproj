@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{dbd30fcb-b558-46cc-8389-c0375d58156e}</ProjectGuid>
+    <ProjectHome />
+    <StartupFile />
+    <SearchPath />
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <InterpreterId />
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
+  <PropertyGroup>
+    <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="lib\mypicsdb\common.py" />
+    <Compile Include="lib\mypicsdb\dbabstractionlayer.py" />
+    <Compile Include="lib\mypicsdb\file_item.py" />
+    <Compile Include="lib\mypicsdb\filterwizard.py" />
+    <Compile Include="lib\mypicsdb\googlemaps.py" />
+    <Compile Include="lib\mypicsdb\iptcinfo.3.py" />
+    <Compile Include="lib\mypicsdb\iptcinfo.bak.py" />
+    <Compile Include="lib\mypicsdb\local\dialogaddonscan\AddonScan.py" />
+    <Compile Include="lib\mypicsdb\local\dialogaddonscan\DialogAddonScan.py" />
+    <Compile Include="lib\mypicsdb\local\dialogaddonscan\__init__.py" />
+    <Compile Include="lib\mypicsdb\local\__init__.py" />
+    <Compile Include="lib\mypicsdb\MypicsDB.py" />
+    <Compile Include="lib\mypicsdb\parser\exif\classes.py" />
+    <Compile Include="lib\mypicsdb\parser\exif\exif.py" />
+    <Compile Include="lib\mypicsdb\parser\exif\exif_log.py" />
+    <Compile Include="lib\mypicsdb\parser\exif\heic.py" />
+    <Compile Include="lib\mypicsdb\parser\exif\tags\exif.py" />
+    <Compile Include="lib\mypicsdb\parser\exif\tags\makernote\apple.py" />
+    <Compile Include="lib\mypicsdb\parser\exif\tags\makernote\canon.py" />
+    <Compile Include="lib\mypicsdb\parser\exif\tags\makernote\casio.py" />
+    <Compile Include="lib\mypicsdb\parser\exif\tags\makernote\fujifilm.py" />
+    <Compile Include="lib\mypicsdb\parser\exif\tags\makernote\nikon.py" />
+    <Compile Include="lib\mypicsdb\parser\exif\tags\makernote\olympus.py" />
+    <Compile Include="lib\mypicsdb\parser\exif\tags\makernote\__init__.py" />
+    <Compile Include="lib\mypicsdb\parser\exif\tags\__init__.py" />
+    <Compile Include="lib\mypicsdb\parser\exif\utils.py" />
+    <Compile Include="lib\mypicsdb\parser\exif\__init__.py" />
+    <Compile Include="lib\mypicsdb\parser\iptc\iptcinfo.py" />
+    <Compile Include="lib\mypicsdb\parser\xmp\xmp.py" />
+    <Compile Include="lib\mypicsdb\pathscanner.py" />
+    <Compile Include="lib\mypicsdb\scanpath.py" />
+    <Compile Include="lib\mypicsdb\storageserverdummy.py" />
+    <Compile Include="lib\mypicsdb\translationeditor.py" />
+    <Compile Include="lib\mypicsdb\viewer.py" />
+    <Compile Include="lib\mypicsdb\__init__.py" />
+    <Compile Include="lib\__init__.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="lib" />
+    <Folder Include="lib\mypicsdb" />
+    <Folder Include="lib\mypicsdb\local" />
+    <Folder Include="lib\mypicsdb\local\dialogaddonscan" />
+    <Folder Include="lib\mypicsdb\parser\" />
+    <Folder Include="lib\mypicsdb\parser\exif" />
+    <Folder Include="lib\mypicsdb\parser\exif\tags" />
+    <Folder Include="lib\mypicsdb\parser\exif\tags\makernote" />
+    <Folder Include="lib\mypicsdb\parser\iptc" />
+    <Folder Include="lib\mypicsdb\parser\xmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="addon.xml" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
+</Project>
