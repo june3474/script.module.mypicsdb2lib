@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 
 """ 
 Database abstraction layer for Sqlite and MySql
@@ -161,7 +161,7 @@ class SqliteConnection(BaseConnection):
 
     def connect(self, db_name, *args):
         self.db_name = db_name
-        self.connection = database.connect(db_name, timeout = 10)
+        self.connection = database.connect(db_name, timeout = 10, detect_types=database.PARSE_DECLTYPES | database.PARSE_COLNAMES)
 
 
     def cursor(self):        
