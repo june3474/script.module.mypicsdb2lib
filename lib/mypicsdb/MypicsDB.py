@@ -18,7 +18,7 @@ from os.path import join
 from traceback import print_exc
 from time import strftime,strptime
 import json
-
+import datetime
 
 import xbmc
 import xbmcgui
@@ -1793,6 +1793,7 @@ class MyPictureDB(object):
 
 
     def get_pics_dates(self):
+
         """return all different dates from 'EXIF DateTimeOriginal'"""
         if self.con.get_backend() == "mysql":
             return [t for (t,) in self.cur.request("""SELECT DISTINCT date_format(ImageDateTime, '%Y-%m-%d') as ImageDateTime FROM Files f WHERE length(trim(ImageDateTime))>8 AND ImageDateTime> 0 ORDER BY ImageDateTime ASC""")]
@@ -1801,10 +1802,24 @@ class MyPictureDB(object):
 
 
     def get_pic_date(self, path, filename):
-        try:
-            (rows, ) = [row for (row,) in self.cur.request( "SELECT coalesce(ImageDateTime, '0') FROM Files WHERE strPath=? AND strFilename=? ",(path,filename) )]
+        """Get ImageDateTime of the given picture file
 
-            return str(rows)
+        Args:
+            path (str): file path without file name
+            filename (str): file name
+
+        Returns (obj`:datetime.datetime:`):
+        """                
+
+        try:
+            converter = 'as "ts [timestamp]"' if self.db_backend.lower() == 'sqlite3' else ""
+            _query = """
+                SELECT ImageDateTime %s 
+                FROM Files WHERE strPath=? AND strFilename=? 
+            """ % (converter)
+            (date, ) = [row for (row,) in self.cur.request(_query, (path,filename))]
+
+            return date
         except Exception as msg:
             common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
             return None
@@ -1814,12 +1829,13 @@ class MyPictureDB(object):
         
             common.log("get_pic_persons", path)
             common.log("get_pic_persons", filename)
-            rows = [row for row in self.cur.request( """select tc.TagContent from Files f, TagsInFiles tif, TagContents tc, TagTypes tt
-where f.idFile = tif.idFile
-and tif.idTagContent = tc.idTagContent
-and tc.idTagType = tt.idTagType
-and tt.TagType in( 'MPReg:PersonDisplayName', 'Iptc4xmpExt:PersonInImage', 'Mwg-rs:RegionList:Face')
-and f.strPath=? AND f.strFilename=? """,(path,filename) )]
+            rows = [row for row in self.cur.request( """select tc.TagContent 
+                from Files f, TagsInFiles tif, TagContents tc, TagTypes tt
+                where f.idFile = tif.idFile
+                and tif.idTagContent = tc.idTagContent
+                and tc.idTagType = tt.idTagType
+                and tt.TagType in('MPReg:PersonDisplayName', 'Iptc4xmpExt:PersonInImage', 'Mwg-rs:RegionList:Face')
+                and f.strPath=? AND f.strFilename=? """,(path,filename))]
         
             str1 = ""
     
@@ -1837,11 +1853,27 @@ and f.strPath=? AND f.strFilename=? """,(path,filename) )]
             return None
             
     def get_pic_date_rating(self, path, filename):
+        """Get ImageDateTime and ImageRating of the given picture file
+
+        Args:
+            path (str): file path without file name
+            filename (str): file name
+
+        Returns (tuple): tuple of (ImageDateTime, ImageRating)
+            ImageDateTime (obj`:datetime.datetime:`)
+            ImageRating (str)
+        """
+
         try:
-            (date, rating) = [row for row in self.cur.request( "SELECT coalesce(ImageDateTime, '0'), ImageRating FROM Files WHERE strPath=? AND strFilename=? ",(path,filename) )][0]
+            converter = 'as "ts [timestamp]"' if self.db_backend.lower() == 'sqlite3' else ""
+            _query = """
+                SELECT ImageDateTime %s, ImageRating 
+                FROM Files WHERE strPath=? AND strFilename=? 
+            """ % (converter)
+            (date, rating) = [row for row in self.cur.request(_query, (path,filename))][0]
             return (date, rating)
         except Exception as msg:
-            common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+            common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR)
             return None
         
 
