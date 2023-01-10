@@ -1812,7 +1812,7 @@ class MyPictureDB(object):
         """                
 
         try:
-            converter = 'as "ts [timestamp]"' if self.db_backend.lower() == 'sqlite3' else ""
+            converter = 'as "ts [timestamp]"' if self.db_backend.lower() == 'sqlite' else ""
             _query = """
                 SELECT ImageDateTime %s 
                 FROM Files WHERE strPath=? AND strFilename=? 
@@ -1865,7 +1865,7 @@ class MyPictureDB(object):
         """
 
         try:
-            converter = 'as "ts [timestamp]"' if self.db_backend.lower() == 'sqlite3' else ""
+            converter = 'as "ts [timestamp]"' if self.db_backend.lower() == 'sqlite' else ""
             _query = """
                 SELECT ImageDateTime %s, ImageRating 
                 FROM Files WHERE strPath=? AND strFilename=? 
