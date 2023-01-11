@@ -1874,7 +1874,7 @@ class MyPictureDB(object):
             return (date, rating)
         except Exception as msg:
             common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR)
-            return None
+            return (None, '0')
         
 
 if __name__=="__main__":
