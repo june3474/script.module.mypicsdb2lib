@@ -1865,12 +1865,24 @@ class MyPictureDB(object):
         """
 
         try:
-            converter = 'as "ts [timestamp]"' if self.db_backend.lower() == 'sqlite' else ""
+            # The methode below causes an error when ImageDateTime is null,
+            # because converter map for null to timestamp is not present.
+            # -------------------------------------------------------------
+            #converter = 'as "ts [timestamp]"' if self.db_backend.lower() == 'sqlite' else ""
+            #_query = """
+            #    SELECT ImageDateTime %s, ImageRating 
+            #    FROM Files WHERE strPath=? AND strFilename=? 
+            #""" % (converter)
+            # -------------------------------------------------------------
+ 
             _query = """
-                SELECT ImageDateTime %s, ImageRating 
+                SELECT ImageDateTime, ImageRating 
                 FROM Files WHERE strPath=? AND strFilename=? 
-            """ % (converter)
-            (date, rating) = [row for row in self.cur.request(_query, (path,filename))][0]
+            """         
+            date, rating = [row for row in self.cur.request(_query, (path,filename))][0]
+            # With sqlite3, date is returned as str
+            if self.db_backend.lower() == 'sqlite' and date:
+                date = datetime.datetime.fromisoformat(date)
             return (date, rating)
         except Exception as msg:
             common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR)
