@@ -1812,13 +1812,14 @@ class MyPictureDB(object):
         """                
 
         try:
-            converter = 'as "ts [timestamp]"' if self.db_backend.lower() == 'sqlite' else ""
             _query = """
-                SELECT ImageDateTime %s 
+                SELECT ImageDateTime
                 FROM Files WHERE strPath=? AND strFilename=? 
-            """ % (converter)
+            """
             (date, ) = [row for (row,) in self.cur.request(_query, (path,filename))]
-
+            # With sqlite3, date is returned as str
+            if self.db_backend.lower() == 'sqlite' and date:
+                date = datetime.datetime.fromisoformat(date)
             return date
         except Exception as msg:
             common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
