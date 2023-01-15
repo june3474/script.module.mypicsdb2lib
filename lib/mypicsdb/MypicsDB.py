@@ -1653,7 +1653,7 @@ class MyPictureDB(object):
             except:
                 #fin
                 break
-            chlist = [row for (row,) in self.cur.request( """SELECT idFolder FROM Folders WHERE ParentFolder='%s'"""%chid )]#2,10,17
+            chlist = [row for (row,) in self.cur.request( "SELECT idFolder FROM Folders WHERE ParentFolder='%s'"%chid )]#2,10,17
             childrens=childrens+chlist
             enfants=enfants+chlist
     
