@@ -1629,22 +1629,29 @@ class MyPictureDB(object):
 
 
     def all_children_of_folder(self, rootid):
-        """liste les id des dossiers enfants"""
-        #A REVOIR : Ne fonctionne pas correctement !
-        enfants=[]
-        childrens=[rootid]
-        #continu = False
-        while True:
-            try:
-                chid = childrens.pop(0)
-            except:
-                #fin
-                break
-            chlist = [row for (row,) in self.cur.request( """SELECT idFolder FROM Folders WHERE ParentFolder='%s'"""%chid )]#2,10,17
-            childrens=childrens+chlist
-            enfants=enfants+chlist
-    
-        return enfants
+        """lister tous les sous-dossiers de manière récursive
+
+        Note:
+            rooidid is NOT included in the return value.
+        
+        Args:
+            rootid (int): idFolder in Folders table
+
+        Returns (list): idFolder values of all subfolders under rootid.
+                        If there is no subfolder, returns an empty list. 
+
+        """
+        children = [row for (row,) in self.cur.request( """SELECT idFolder 
+                                                           FROM Folders 
+                                                           WHERE ParentFolder='%s'
+                                                        """  % rootid )]
+        if children:
+            descendance = []
+            for c in children:
+                descendance = descendance + [c] + self.all_children_of_folder(c)
+            return descendance
+        else:
+            return []
 
 
     def search_between_dates(self, DateStart=("2007","%Y"),DateEnd=("2008","%Y"), MinRating=0):
