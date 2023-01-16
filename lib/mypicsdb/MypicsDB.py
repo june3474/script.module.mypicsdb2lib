@@ -1629,10 +1629,22 @@ class MyPictureDB(object):
 
 
     def all_children_of_folder(self, rootid):
-        """lister tous les sous-dossiers de manière récursive"""
+        """lister tous les sous-dossiers de manière récursive
+
+        Note:
+            rooidid is NOT included in the return value.
+        
+        Args:
+            rootid (int): idFolder in Folders table
+
+        Returns (list): idFolder values of all subfolders under rootid.
+                        If there is no subfolder, returns an empty list. 
+        """        
+
         children = [row for (row,) in self.cur.request( """SELECT idFolder 
                                                            FROM Folders 
-                                                           WHERE ParentFolder='%s'"""  % rootid )]
+                                                           WHERE ParentFolder='%s'
+                                                        """  % rootid )]
         if children:
             descendance = []
             for c in children:
