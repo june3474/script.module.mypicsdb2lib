@@ -648,43 +648,81 @@ class MyPictureDB(object):
         for idchild in childrens:
             list_child.extend(self.get_children(idchild))
         return list_child
+
     
-    def del_pic(self, picpath, picfile=None): 
-    
+    def del_pic(self, picpath, picfile=None):
+        files2deleted = []
+        folders2deleted = []
+
         if picfile:
             picpath = picpath.replace("\\", "\\\\")
-            self.cur.request("""DELETE FROM Files WHERE idFolder = (SELECT idFolder FROM Folders WHERE FullPath Like ?) AND strFilename=? """,(picpath,picfile, ))
-    
+            _query = """
+                SELECT idFile FROM Files 
+                WHERE idFolder = (SELECT idFolder FROM Folders WHERE FullPath Like ?) 
+                AND strFilename = ? 
+            """
+            files2deleted += [id[0] for id in self.cur.request(_query, (picpath, picfile,))]
+        else: # remove all files in the picpath from the DB
+            if picpath:
+                try:
+                    # folders to remove
+                    _query = """
+                        SELECT idFolder FROM Folders WHERE FullPath = ? 
+                    """
+                        # The extra comma after picpath MATTERS
+                    folder = [f[0] for f in self.cur.request(_query, (picpath,))]
+                    folders2deleted += folder
+                    children = self.all_children_of_folder(picpath)
+                    folders2deleted += children
+
+                    # files to remove
+                    _query = """
+                        SELECT idFile FROM Files 
+                        WHERE strPath = ? OR idFolder IN %s
+                    """ % repr(tuple(children))
+                    files2deleted += [p[0] for p in self.cur.request(_query, (picpath,))]
+                except Exception as msg:
+                    common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )
+            else: # Is this posssible? Can Folders.FullPath be null? for cleanup?
+                try:
+                    # folders to remove
+                    _query = """
+                        SELECT idFolder FROM Folders WHERE FullPath is NULL
+                    """
+                    folders2deleted += [f[0] for f in self.cur.request(_query)]
+
+                    # files to remove
+                    _query = """
+                        SELECT idFile FROM Files WHERE strPath is NULL
+                    """
+                    files2deleted += [p[0] for p in self.cur.request(_query)]                        
+                except Exception as msg:
+                    common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR)
+
+        # trim files2deleted & folders2deleted
+        # When convert a list with 1-element to a tuple, a comma is added at the end
+        if len(files2deleted) == 1:
+            files2deleted_str = '(%s)' % files2deleted[0]
         else:
-    
-            try:
-                if picpath:
-                    try:
-                        idpath = self.cur.request("""SELECT idFolder FROM Folders WHERE FullPath = ? """, (picpath,))[0][0]
-                    except Exception as msg:
-                        common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )             
+            files2deleted_str = repr(tuple(files2deleted))
+        if len(folders2deleted) == 1:
+            folders2deleted_str = '(%s)'% folders2deleted[0]
+        else:
+            folders2deleted_str = repr(tuple(folders2deleted))
 
-                else:
-                    try:
-                        idpath = self.cur.request("""SELECT idFolder FROM Folders WHERE FullPath is null""")[0][0]
-                    except Exception as msg:
-                        common.log("",  "%s - %s"%(Exception,msg), xbmc.LOGERROR )             
-
-                common.log( "del_pic", "(%s,%s)"%( common.smart_utf8(picpath),common.smart_utf8(picfile)) )
+        # delete files Files table and collections
+        if files2deleted:
+            self.cur.request("DELETE FROM Files WHERE idFile IN %s" % files2deleted_str)
+            common.log("del_pic", "DELETE FROM Files WHERE idFile IN %s" % files2deleted_str)
+            self.cur.request("DELETE FROM FilesInCollections WHERE idFile IN %s" % files2deleted_str)
+        # delete folders from Folders table
+        if folders2deleted:
+            self.cur.request("DELETE FROM Folders WHERE idFolder IN %s" % folders2deleted_str)
+            common.log("del_pic", "DELETE FROM Folders WHERE idFolder IN %s" % folders2deleted_str)            
+        # commit is done in cleanup_keywords()
+        if files2deleted or folders2deleted:
+            self.cleanup_keywords()
     
-                deletelist=[]
-                deletelist.append(idpath)
-                deletelist.extend(self.get_children(str(idpath)))
-    
-                self.cur.request( """DELETE FROM Files WHERE idFolder in ("%s")"""%""" "," """.join([str(i) for i in deletelist]) )
-                common.log( "del_pic", """DELETE FROM Folders WHERE idFolder in ("%s") """%""" "," """.join([str(i) for i in deletelist]))
-                self.cur.request( """DELETE FROM Folders WHERE idFolder in ("%s") """%""" "," """.join([str(i) for i in deletelist]) )
-            except:
-                pass
-            
-        self.cleanup_keywords()
-    
-        return
     
     def sha_of_file ( self, filepath, length = None ) :
         loaded_bytes = 65536
@@ -1041,14 +1079,16 @@ class MyPictureDB(object):
         playlist = urllib.parse.unquote_plus(playlist)
         common.log("", "collection_add_playlist")
         if colname:
-            self.cur.request( """UPDATE Collections SET PlayListName = ? WHERE CollectionName=? """, (playlist, colname) )
+            self.cur.request("""UPDATE Collections SET PlayListName = ? WHERE CollectionName=? """, (playlist, colname))
             self.con.commit()
         
     def collection_add_pic(self, colname, filepath, filename):    
         colname = urllib.parse.unquote_plus(colname)
         filepath = urllib.parse.unquote_plus(filepath)
         filename = urllib.parse.unquote_plus(filename)
-        self.cur.request( """INSERT INTO FilesInCollections(idCol,idFile) VALUES ( (SELECT idCol FROM Collections WHERE CollectionName=?) , (SELECT idFile FROM Files WHERE strPath=? AND strFilename=?) )""",(colname,filepath,filename) )
+        self.cur.request("""INSERT INTO FilesInCollections(idCol,idFile) 
+                            VALUES ((SELECT idCol FROM Collections WHERE CollectionName=?), 
+                                    (SELECT idFile FROM Files WHERE strPath=? AND strFilename=?) )""",(colname,filepath,filename))
         self.con.commit()
 
 
@@ -1057,7 +1097,9 @@ class MyPictureDB(object):
         filepath = urllib.parse.unquote_plus(filepath)
         filename = urllib.parse.unquote_plus(filename)
         common.log("collection_del_pic","%s, %s, %s"%(colname, filepath, filename))
-        self.cur.request( """DELETE FROM FilesInCollections WHERE idCol=(SELECT idCol FROM Collections WHERE CollectionName=?) AND idFile=(SELECT idFile FROM Files WHERE strPath=? AND strFilename=?)""",(colname, filepath, filename) )
+        self.cur.request("""DELETE FROM FilesInCollections 
+                            WHERE idCol=(SELECT idCol FROM Collections WHERE CollectionName=?) 
+                            AND idFile=(SELECT idFile FROM Files WHERE strPath=? AND strFilename=?)""",(colname, filepath, filename))
         self.con.commit()
 
 
@@ -1088,12 +1130,11 @@ class MyPictureDB(object):
         self.con.commit()
 
 
-
     ####################
     # Periodes functions
     #####################
     def periods_list(self):
-        return [row for row in self.cur.request( """SELECT PeriodeName,DateStart,DateEnd FROM Periodes""")]
+        return [row for row in self.cur.request("""SELECT PeriodeName,DateStart,DateEnd FROM Periodes""")]
 
 
     def period_add(self, periodname, datestart, dateend):
